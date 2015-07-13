@@ -81,4 +81,3 @@ inquirer.prompt(questions, function (answers) {
     console.log('Project ready for execution')
   });
 });
-console.log("Success"); 
