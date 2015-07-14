@@ -20,7 +20,7 @@
   "author": {
     "name": "Rulaxe",
     "email": "rr@manoderecha.mx"
-    },
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Rulaxe/get-luke/issues"
@@ -32,7 +32,8 @@
     "invoke": "^0.1.2",
     "replace": "^0.3.0",
     "tar": "^2.1.1",
-    "wget": "0.0.1"
+    "wget": "0.0.1",
+    "wget-improved": "^1.0.1"
   },
   "preferGlobal": true,
   "bin": {

@@ -3,12 +3,13 @@
 "use strict";
 //import all the necessary modules
 var invoke = require('invoke')
-  , wget = require('wget')
+  , wget = require('wget-improved')
   , fs = require('fs')
   , tar = require('tar')
   , zlib = require('zlib')
   , replace = require('replace')
   , inquirer = require("inquirer")
+  , exec = require('child_process').exec
   , projectName
 
 //this method uses replace module receiving 3 parameters
@@ -44,7 +45,38 @@ inquirer.prompt(questions, function (answers) {
     download.on('end', function(output) {
         console.log(output + " downloaded");
     });
+    var dlvag = wget.download('https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.3_x86_64.deb', 'vagrant.deb');
+    dlvag.on('error', function(err) {
+        console.log("Download vagrant error: " + err);
+    });
+    dlvag.on('end', function(output) {
+        console.log(output + " downloaded");
+        exec('sudo dpkg -i vagrant.deb', function(error, stdout, stderr) {
+            console.log('stdout: ' + stdout);
+            console.log('stderr: ' + stderr);
+            if (error !== null) {
+                console.log('exec error: ' + error);
+            }
+        });
+    });
+    exec('sudo apt-get install python', function(error, stdout, stderr) {
+        console.log('stdout: ' + stdout);
+        console.log('stderr: ' + stderr);
+        if (error !== null) {
+            console.log('exec error: ' + error);
+        }
+    });
     setTimeout(callback, 3000)
+
+  }).then(function (data, callback) {
+    exec('sudo apt-get install virtualbox', function(error, stdout, stderr) {
+        console.log('stdout: ' + stdout);
+        console.log('stderr: ' + stderr);
+        if (error !== null) {
+            console.log('exec error: ' + error);
+        }
+    });
+    setTimeout(callback, 2000)
 
   }).then(function (data, callback) {
     fs.createReadStream('master.tar.gz')
