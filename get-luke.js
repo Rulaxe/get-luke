@@ -12,11 +12,9 @@ var invoke = require('invoke')
   , exec = require('child_process').exec
   , instVbox = true
   , instVagr = true
-  , instPyth = true
   , instPip = true
   , instFabr = true
   , instFabU = true
-  , sudo = require('sudo')
   , projectName
   , st
 
