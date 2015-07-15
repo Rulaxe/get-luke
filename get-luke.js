@@ -16,6 +16,7 @@ var invoke = require('invoke')
   , instPip = true
   , instFabr = true
   , instFabU = true
+  , sudo = require('sudo')
   , projectName
   , st
 
@@ -44,20 +45,20 @@ inquirer.prompt(questions, function (answers) {
 
   projectName = answers.pName
   invoke(function (data, callback) {
-
-    st = exec('sudo apt-get install python virtualbox gtk2-engines-pixbuf', function(error, stdout, stderr) {
-      console.log(stdout);
-      if (error !== null) {
-        console.log('sudep installation error: ' + error);
-      }
-    });
-    st.on('close', function(){
-      callback();
-    });
-
-  }).then(function (data, callback) {
     
     console.log ('Checking dependencies:');
+    exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep virtual", function(error, stdout, stderr) {
+      if (stdout.indexOf('virtualbox') != -1){
+        console.log('-Virtualbox is already installed');
+        instVbox = false;
+      }
+      else{
+        console.log('-Virtualbox will be installed');
+      }
+      if (error !== null) {
+          console.log('exec error: ' + error);
+      }
+    });
     exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep vagrant", function(error, stdout, stderr) {
       if (stdout.indexOf('vagrant') != -1){
         console.log('-Vagrant is already installed');
@@ -106,6 +107,30 @@ inquirer.prompt(questions, function (answers) {
   }).then(function (data, callback) {
 
     console.log('Installing Dependencies');
+
+    if (instVbox){
+      var download = wget.download('http://download.virtualbox.org/virtualbox/5.0.0/virtualbox-5.0_5.0.0-101573~Ubuntu~trusty_amd64.deb', 'vbox.deb');
+      download.on('error', function(err) {
+          console.log("Error downloading virtualbox: " + err);
+      });
+      download.on('end', function(output) {
+        st = exec('sudo dpkg -i vbox.deb', function(error, stdout, stderr) {
+          console.log(stdout);
+          if (error !== null) {
+            console.log('virtualbox installation error: ' + error);
+          }
+        });
+        st.on('close', function(){
+          console.log('virtualbox installation finished');
+          callback();
+        });
+      });
+    }
+    else{
+      callback();
+    }
+    
+  }).then(function (data, callback) {
 
     if (instPip){
       var download = wget.download('https://bootstrap.pypa.io/get-pip.py', 'pip.py');
