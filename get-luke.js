@@ -10,7 +10,14 @@ var invoke = require('invoke')
   , replace = require('replace')
   , inquirer = require("inquirer")
   , exec = require('child_process').exec
+  , instVbox = true
+  , instVagr = true
+  , instPyth = true
+  , instPip = true
+  , instFabr = true
+  , instFabU = true
   , projectName
+  , st
 
 //this method uses replace module receiving 3 parameters
 function repFile(file, inString, outString) {
@@ -32,61 +39,230 @@ var questions = [
   }
 ];
 
-
 //main method for deploying the new luke project.
 inquirer.prompt(questions, function (answers) {
 
   projectName = answers.pName
   invoke(function (data, callback) {
+    
+    console.log ('Checking dependencies:');
+    exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep python2", function(error, stdout, stderr) {
+      if (stdout.indexOf('2.7') != -1){
+        console.log('-Python is already installed');
+        instPyth = false;
+      }
+      else{
+        console.log('-Python will be installed');
+      }
+      if (error !== null) {
+          console.log('exec error: ' + error);
+      }
+    });
+    exec('vboxmanage --version', function(error, stdout, stderr) {
+      if (stdout.indexOf('4.') != -1){
+        console.log('-Virtualbox is already installed');
+        instVbox = false;
+      }
+      else{
+        console.log('-Virtualbox will be installed');
+      }
+      if (error !== null) {
+          console.log('exec error: ' + error);
+      }
+    });
+    exec('vagrant --version', function(error, stdout, stderr) {
+      if (stdout.indexOf('1.7') != -1){
+        console.log('-Vagrant is already installed');
+        instVagr = false;
+      }
+      else{
+        console.log('-Vagrant will be installed');
+      }
+      if (error !== null) {
+          console.log('exec error: ' + error);
+      }
+    });
+    exec('pip --version', function(error, stdout, stderr) {
+      if (stdout.indexOf('7.1') != -1){
+        console.log('-Pip is already installed');
+        instPip = false;
+      }
+      else{
+        console.log('-Pip will be installed');
+      }
+      if (error !== null) {
+          console.log('exec error: ' + error);
+      }
+    });
+    exec('fab --version', function(error, stdout, stderr) {
+      if (stdout.indexOf('1.10') != -1){
+        console.log('-Fabric is already installed');
+        instFabr = false;
+      }
+      else{
+        console.log('-Fabric will be installed');
+      }
+      if (error !== null) {
+          console.log('exec error: ' + error);
+      }
+    });
+    exec('pip show vo-fabutils', function(error, stdout, stderr) {
+      if (stdout.indexOf('Vinco') != -1){
+        console.log('-Fabutils is already installed');
+        instFabU = false;
+      }
+      else{
+        console.log('-Fabutils will be installed');
+      }
+      if (error !== null) {
+        console.log('exec error: ' + error);
+      }
+    });
+    setTimeout(callback, 1000);
+
+  }).then(function (data, callback) {
+
+    console.log('Installing Dependencies');
+    if(instVbox || instPyth){
+      var aptInst = "sudo apt-get install";
+      if(instVbox) aptInst += ' virtualbox';
+      if(instPyth) aptInst += ' python';
+      st = exec(aptInst, function(error, stdout, stderr) {
+        console.log(stdout);
+        if (error !== null) {
+          console.log('apt installation error: ' + error);
+        }
+      });
+      st.on('close', function(code){
+        console.log('virtualbox/python installation finished');
+        callback();
+      });
+    }
+    else{
+      callback();
+    }
+
+  }).then(function (data, callback) {
+
+    if (instPip){
+      var download = wget.download('https://bootstrap.pypa.io/get-pip.py', 'pip.py');
+      download.on('error', function(err) {
+          console.log("Error downloading pip: " + err);
+      });
+      download.on('end', function(output) {
+        st = exec('python pip.py', function(error, stdout, stderr) {
+          console.log(stdout);
+          if (error !== null) {
+            console.log('pip installation error: ' + error);
+          }
+        });
+        st.on('close', function(){
+          console.log('pip installation finished');
+          callback();
+        });
+      });
+    }
+    else{
+      callback();
+    }
+
+  }).and(function (data, callback) {
+    
+    if (instVagr){
+      var download = wget.download('https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.3_x86_64.deb', 'vagrant.deb');
+      download.on('error', function(err) {
+          console.log("Error downloading vagrant: " + err);
+      });
+      download.on('end', function(output) {
+        st = exec('sudo dpkg -i vagrant.deb', function(error, stdout, stderr) {
+          console.log(stdout);
+          if (error !== null) {
+            console.log('vagrant installation error: ' + error);
+          }
+        });
+        st.on('close', function(){
+          console.log('vagrant installation finished');
+          callback();
+        });
+      });
+    }
+    else{
+      callback();
+    }
+
+  }).then(function (data, callback) {
+
+    if (instFabr){
+      st = exec('sudo pip install fabric', function(error, stdout, stderr) {
+        console.log(stdout);
+        if (error !== null) {
+          console.log('fabric installation error: ' + error);
+        }
+      });
+      st.on('close', function(){
+        console.log('fabric installation finished');
+        callback();
+      });
+    }
+    else{
+      callback();
+    }
+
+  }).then(function (data, callback) {
+
+    if (instFabU){
+      st = exec('sudo pip install vo-fabutils', function(error, stdout, stderr) {
+        console.log(stdout);
+        if (error !== null) {
+          console.log('fabutils installation error: ' + error);
+        }
+      });
+      st.on('close', function(){
+        console.log('fabutils installation finished');
+        callback();
+      });
+    }
+    else{
+      callback();
+    }
+  }).and(function (data, callback) {
+    console.log('Installing unmet subdependencies')
+    st = exec('sudo apt-get -f install', function(error, stdout, stderr) {
+      console.log(stdout);
+      if (error !== null) {
+        console.log('sudep installation error: ' + error);
+      }
+    });
+    st.on('close', function(){
+      console.log('subdep installation finished');
+      callback();
+    });
+
+
+  }).then(function (data, callback) {
+    console.log('Downloading luke tarball')
     var download = wget.download('https://codeload.github.com/vinco/luke/tar.gz/master', 'master.tar.gz');
     download.on('error', function(err) {
         console.log("Download error: " + err);
     });
     download.on('end', function(output) {
-        console.log(output + " downloaded");
+        console.log("Luke downloaded");
+        callback();
     });
-    var dlvag = wget.download('https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.3_x86_64.deb', 'vagrant.deb');
-    dlvag.on('error', function(err) {
-        console.log("Download vagrant error: " + err);
-    });
-    dlvag.on('end', function(output) {
-        console.log(output + " downloaded");
-        exec('sudo dpkg -i vagrant.deb', function(error, stdout, stderr) {
-            console.log('stdout: ' + stdout);
-            console.log('stderr: ' + stderr);
-            if (error !== null) {
-                console.log('exec error: ' + error);
-            }
-        });
-    });
-    exec('sudo apt-get install python', function(error, stdout, stderr) {
-        console.log('stdout: ' + stdout);
-        console.log('stderr: ' + stderr);
-        if (error !== null) {
-            console.log('exec error: ' + error);
-        }
-    });
-    setTimeout(callback, 3000)
 
   }).then(function (data, callback) {
-    exec('sudo apt-get install virtualbox', function(error, stdout, stderr) {
-        console.log('stdout: ' + stdout);
-        console.log('stderr: ' + stderr);
-        if (error !== null) {
-            console.log('exec error: ' + error);
-        }
-    });
-    setTimeout(callback, 2000)
-
-  }).then(function (data, callback) {
+    console.log('Unpacking luke');
     fs.createReadStream('master.tar.gz')
     .pipe(zlib.createGunzip())
     .pipe(tar.Extract({ path: projectName+"/", strip: 1}))
     .on('error', function(er) { console.log("Unpacking error: " + err) })
-    .on("end", function() { console.log("Unpacking finished") })
-    setTimeout(callback, 2000)
+    .on("end", function() {
+      console.log("Unpacking finished")
+      callback();
+    })
 
   }).then(function (data, callback) {
+    console.log('Setting up the new project');
     var setFile = projectName+"/environments.json",
       fabFile = projectName+"/fabfile.py",
       provFile = projectName+"/provision/provision.sh",

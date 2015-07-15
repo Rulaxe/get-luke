@@ -1,6 +1,6 @@
 {
   "name": "get-luke",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Simple node module for deployig new luke projects",
   "main": "get-luke.js",
   "scripts": {
@@ -32,7 +32,6 @@
     "invoke": "^0.1.2",
     "replace": "^0.3.0",
     "tar": "^2.1.1",
-    "wget": "0.0.1",
     "wget-improved": "^1.0.1"
   },
   "preferGlobal": true,
