@@ -46,6 +46,7 @@ inquirer.prompt(questions, function (answers) {
   invoke(function (data, callback) {
 
     st = exec('sudo apt-get install python virtualbox gtk2-engines-pixbuf', function(error, stdout, stderr) {
+      console.log(stdout);
       if (error !== null) {
         console.log('sudep installation error: ' + error);
       }
