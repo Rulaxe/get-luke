@@ -113,7 +113,7 @@ inquirer.prompt(questions, function (answers) {
           console.log("Error downloading pip: " + err);
       });
       download.on('end', function(output) {
-        st = exec('python pip.py', function(error, stdout, stderr) {
+        st = exec('sudo python pip.py', function(error, stdout, stderr) {
           console.log(stdout);
           if (error !== null) {
             console.log('pip installation error: ' + error);
