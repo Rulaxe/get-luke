@@ -44,34 +44,21 @@ inquirer.prompt(questions, function (answers) {
 
   projectName = answers.pName
   invoke(function (data, callback) {
+
+    st = exec('sudo apt-get install python virtualbox gtk2-engines-pixbuf', function(error, stdout, stderr) {
+      if (error !== null) {
+        console.log('sudep installation error: ' + error);
+      }
+    });
+    st.on('close', function(){
+      callback();
+    });
+
+  }).then(function (data, callback) {
     
     console.log ('Checking dependencies:');
-    exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep python2", function(error, stdout, stderr) {
-      if (stdout.indexOf('2.7') != -1){
-        console.log('-Python is already installed');
-        instPyth = false;
-      }
-      else{
-        console.log('-Python will be installed');
-      }
-      if (error !== null) {
-          console.log('exec error: ' + error);
-      }
-    });
-    exec('vboxmanage --version', function(error, stdout, stderr) {
-      if (stdout.indexOf('4.') != -1){
-        console.log('-Virtualbox is already installed');
-        instVbox = false;
-      }
-      else{
-        console.log('-Virtualbox will be installed');
-      }
-      if (error !== null) {
-          console.log('exec error: ' + error);
-      }
-    });
-    exec('vagrant --version', function(error, stdout, stderr) {
-      if (stdout.indexOf('1.7') != -1){
+    exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep vagrant", function(error, stdout, stderr) {
+      if (stdout.indexOf('vagrant') != -1){
         console.log('-Vagrant is already installed');
         instVagr = false;
       }
@@ -82,8 +69,8 @@ inquirer.prompt(questions, function (answers) {
           console.log('exec error: ' + error);
       }
     });
-    exec('pip --version', function(error, stdout, stderr) {
-      if (stdout.indexOf('7.1') != -1){
+    exec('python -c "help(' + "'modules'" + ')" | grep -w "pip"', function(error, stdout, stderr) {
+      if (stdout.indexOf('pip') != -1){
         console.log('-Pip is already installed');
         instPip = false;
       }
@@ -94,20 +81,15 @@ inquirer.prompt(questions, function (answers) {
           console.log('exec error: ' + error);
       }
     });
-    exec('fab --version', function(error, stdout, stderr) {
-      if (stdout.indexOf('1.10') != -1){
+    exec('python -c "help(' + "'modules'" + ')" | grep "fab"', function(error, stdout, stderr) {
+      if (stdout.indexOf('fabric') != -1){
         console.log('-Fabric is already installed');
         instFabr = false;
       }
       else{
         console.log('-Fabric will be installed');
       }
-      if (error !== null) {
-          console.log('exec error: ' + error);
-      }
-    });
-    exec('pip show vo-fabutils', function(error, stdout, stderr) {
-      if (stdout.indexOf('Vinco') != -1){
+      if (stdout.indexOf('fabutils') != -1){
         console.log('-Fabutils is already installed');
         instFabU = false;
       }
@@ -115,34 +97,14 @@ inquirer.prompt(questions, function (answers) {
         console.log('-Fabutils will be installed');
       }
       if (error !== null) {
-        console.log('exec error: ' + error);
+          console.log('exec error: ' + error);
       }
     });
-    setTimeout(callback, 1000);
+    setTimeout(callback, 2000);
 
   }).then(function (data, callback) {
 
     console.log('Installing Dependencies');
-    if(instVbox || instPyth){
-      var aptInst = "sudo apt-get install";
-      if(instVbox) aptInst += ' virtualbox';
-      if(instPyth) aptInst += ' python';
-      st = exec(aptInst, function(error, stdout, stderr) {
-        console.log(stdout);
-        if (error !== null) {
-          console.log('apt installation error: ' + error);
-        }
-      });
-      st.on('close', function(code){
-        console.log('virtualbox/python installation finished');
-        callback();
-      });
-    }
-    else{
-      callback();
-    }
-
-  }).then(function (data, callback) {
 
     if (instPip){
       var download = wget.download('https://bootstrap.pypa.io/get-pip.py', 'pip.py');
