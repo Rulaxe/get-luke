@@ -45,19 +45,16 @@ inquirer.prompt(questions, function (answers) {
   invoke(function (data, callback) {
     
     console.log ('Checking dependencies:');
-    exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep virtual", function(error, stdout, stderr) {
-      if (stdout.indexOf('virtualbox') != -1){
-        console.log('-Virtualbox is already installed');
-        instVbox = false;
-      }
-      else{
-        console.log('-Virtualbox will be installed');
-      }
+    exec("vboxmanage -v", function(error, stdout, stderr) {
       if (error !== null) {
-          console.log('exec error: ' + error);
+          console.log('Se instalará virtualbox')
+      }
+      else {
+          console.log('virtualbox is already installed')
+          instVbox = false;
       }
     });
-    exec("dpkg -l | sed 's_  _\t_g' | cut -f 2 | grep vagrant", function(error, stdout, stderr) {
+    exec("dpkg -l | sed 's_  _\\t_g' | cut -f 2 | grep vagrant", function(error, stdout, stderr) {
       if (stdout.indexOf('vagrant') != -1){
         console.log('-Vagrant is already installed');
         instVagr = false;
@@ -66,7 +63,6 @@ inquirer.prompt(questions, function (answers) {
         console.log('-Vagrant will be installed');
       }
       if (error !== null) {
-          console.log('exec error: ' + error);
       }
     });
     exec('python -c "help(' + "'modules'" + ')" | grep -w "pip"', function(error, stdout, stderr) {
@@ -78,7 +74,6 @@ inquirer.prompt(questions, function (answers) {
         console.log('-Pip will be installed');
       }
       if (error !== null) {
-          console.log('exec error: ' + error);
       }
     });
     exec('python -c "help(' + "'modules'" + ')" | grep "fab"', function(error, stdout, stderr) {
@@ -97,7 +92,6 @@ inquirer.prompt(questions, function (answers) {
         console.log('-Fabutils will be installed');
       }
       if (error !== null) {
-          console.log('exec error: ' + error);
       }
     });
     setTimeout(callback, 2000);
@@ -107,12 +101,13 @@ inquirer.prompt(questions, function (answers) {
     console.log('Installing Dependencies');
 
     if (instVbox){
+      console.log('Instalando virtualbox');
       var download = wget.download('http://download.virtualbox.org/virtualbox/5.0.0/virtualbox-5.0_5.0.0-101573~Ubuntu~trusty_amd64.deb', 'vbox.deb');
       download.on('error', function(err) {
           console.log("Error downloading virtualbox: " + err);
       });
       download.on('end', function(output) {
-        st = exec('sudo dpkg -i vbox.deb', function(error, stdout, stderr) {
+        st = exec('sudo dpkg -i vbox.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
           if (error !== null) {
             console.log('virtualbox installation error: ' + error);
@@ -160,7 +155,7 @@ inquirer.prompt(questions, function (answers) {
           console.log("Error downloading vagrant: " + err);
       });
       download.on('end', function(output) {
-        st = exec('sudo dpkg -i vagrant.deb', function(error, stdout, stderr) {
+        st = exec('sudo dpkg -i vagrant.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
           if (error !== null) {
             console.log('vagrant installation error: ' + error);
@@ -213,7 +208,7 @@ inquirer.prompt(questions, function (answers) {
     }
   }).and(function (data, callback) {
     console.log('Installing unmet subdependencies')
-    st = exec('sudo apt-get -f install', function(error, stdout, stderr) {
+    st = exec('sudo apt-get -f install -y', function(error, stdout, stderr) {
       console.log(stdout);
       if (error !== null) {
         console.log('sudep installation error: ' + error);
