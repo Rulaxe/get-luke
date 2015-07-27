@@ -2,21 +2,21 @@
 
 "use strict";
 //import all the necessary modules
-var invoke = require('invoke')
-  , wget = require('wget-improved')
-  , fs = require('fs')
-  , tar = require('tar')
-  , zlib = require('zlib')
-  , replace = require('replace')
-  , inquirer = require("inquirer")
-  , exec = require('child_process').exec
-  , instVbox = true
-  , instVagr = true
-  , instPip = true
-  , instFabr = true
-  , instFabU = true
-  , projectName
-  , st
+var invoke = require('invoke'),
+  wget = require('wget-improved'),
+  fs = require('fs'),
+  tar = require('tar'),
+  zlib = require('zlib'),
+  replace = require('replace'),
+  inquirer = require("inquirer"),
+  exec = require('child_process').exec,
+  instVbox = true,
+  instVagr = true,
+  instPip = true,
+  instFabr = true,
+  instFabU = true,
+  projectName,
+  st;
 
 //this method uses replace module receiving 3 parameters
 function repFile(file, inString, outString) {
@@ -41,28 +41,29 @@ var questions = [
 //main method for deploying the new luke project.
 inquirer.prompt(questions, function (answers) {
 
-  projectName = answers.pName
+  projectName = answers.pName;
   invoke(function (data, callback) {
     
     console.log ('Checking dependencies:');
     exec("vboxmanage -v", function(error, stdout, stderr) {
       if (error !== null) {
-          console.log('Se instalará virtualbox')
+          console.log('Se instalará virtualbox');
       }
       else {
-          console.log('virtualbox is already installed')
+          console.log('virtualbox is already installed');
           instVbox = false;
       }
     });
-    exec("dpkg -l | sed 's_  _\\t_g' | cut -f 2 | grep vagrant", function(error, stdout, stderr) {
-      if (stdout.indexOf('vagrant') != -1){
+    exec("vagrant --version", function(error, stdout, stderr) {
+      if (stdout.indexOf('Vagrant 1.7') != -1){
         console.log('-Vagrant is already installed');
         instVagr = false;
       }
       else{
-        console.log('-Vagrant will be installed');
+        console.log('-Vagrant will be updated');
       }
       if (error !== null) {
+        console.log('-Vagrant will be installed');
       }
     });
     exec('python -c "help(' + "'modules'" + ')" | grep -w "pip"', function(error, stdout, stderr) {
@@ -74,6 +75,7 @@ inquirer.prompt(questions, function (answers) {
         console.log('-Pip will be installed');
       }
       if (error !== null) {
+        console.log('Error checking for pip: ' + stderr);
       }
     });
     exec('python -c "help(' + "'modules'" + ')" | grep "fab"', function(error, stdout, stderr) {
@@ -92,6 +94,7 @@ inquirer.prompt(questions, function (answers) {
         console.log('-Fabutils will be installed');
       }
       if (error !== null) {
+        console.log('Error checking for Fabric: ' + stderr);
       }
     });
     setTimeout(callback, 2000);
@@ -99,15 +102,18 @@ inquirer.prompt(questions, function (answers) {
   }).then(function (data, callback) {
 
     console.log('Installing Dependencies');
+    if (!fs.existsSync('./tmp')){
+      fs.mkdirSync('./tmp');
+    }
 
     if (instVbox){
       console.log('Instalando virtualbox');
-      var download = wget.download('http://download.virtualbox.org/virtualbox/5.0.0/virtualbox-5.0_5.0.0-101573~Ubuntu~trusty_amd64.deb', 'vbox.deb');
+      var download = wget.download('http://download.virtualbox.org/virtualbox/5.0.0/virtualbox-5.0_5.0.0-101573~Ubuntu~trusty_amd64.deb', './tmp/vbox.deb');
       download.on('error', function(err) {
           console.log("Error downloading virtualbox: " + err);
       });
       download.on('end', function(output) {
-        st = exec('sudo dpkg -i vbox.deb -y', function(error, stdout, stderr) {
+        st = exec('sudo dpkg -i ./tmp/vbox.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
           if (error !== null) {
             console.log('virtualbox installation error: ' + error);
@@ -126,12 +132,12 @@ inquirer.prompt(questions, function (answers) {
   }).then(function (data, callback) {
 
     if (instPip){
-      var download = wget.download('https://bootstrap.pypa.io/get-pip.py', 'pip.py');
+      var download = wget.download('https://bootstrap.pypa.io/get-pip.py', './tmp/pip.py');
       download.on('error', function(err) {
           console.log("Error downloading pip: " + err);
       });
       download.on('end', function(output) {
-        st = exec('sudo python pip.py', function(error, stdout, stderr) {
+        st = exec('sudo python ./tmp/pip.py', function(error, stdout, stderr) {
           console.log(stdout);
           if (error !== null) {
             console.log('pip installation error: ' + error);
@@ -150,12 +156,12 @@ inquirer.prompt(questions, function (answers) {
   }).and(function (data, callback) {
     
     if (instVagr){
-      var download = wget.download('https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.3_x86_64.deb', 'vagrant.deb');
+      var download = wget.download('https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.3_x86_64.deb', './tmp/vagrant.deb');
       download.on('error', function(err) {
           console.log("Error downloading vagrant: " + err);
       });
       download.on('end', function(output) {
-        st = exec('sudo dpkg -i vagrant.deb -y', function(error, stdout, stderr) {
+        st = exec('sudo dpkg -i ./tmp/vagrant.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
           if (error !== null) {
             console.log('vagrant installation error: ' + error);
@@ -222,7 +228,7 @@ inquirer.prompt(questions, function (answers) {
 
   }).then(function (data, callback) {
     console.log('Downloading luke tarball')
-    var download = wget.download('https://codeload.github.com/vinco/luke/tar.gz/master', 'master.tar.gz');
+    var download = wget.download('https://codeload.github.com/vinco/luke/tar.gz/master', './tmp/master.tar.gz');
     download.on('error', function(err) {
         console.log("Download error: " + err);
     });
@@ -233,7 +239,7 @@ inquirer.prompt(questions, function (answers) {
 
   }).then(function (data, callback) {
     console.log('Unpacking luke');
-    fs.createReadStream('master.tar.gz')
+    fs.createReadStream('./tmp/master.tar.gz')
     .pipe(zlib.createGunzip())
     .pipe(tar.Extract({ path: projectName+"/", strip: 1}))
     .on('error', function(er) { console.log("Unpacking error: " + err) })
@@ -264,8 +270,15 @@ inquirer.prompt(questions, function (answers) {
     callback()
 
   }).then(function (data, callback) {
-    fs.unlinkSync('master.tar.gz')
-    callback()
+    st = exec('rm -rf ./tmp', function(error, stdout, stderr) {
+          console.log(stdout);
+          if (error !== null) {
+            console.log('Could not remove temp files, error: ' + error);
+          }
+        });
+        st.on('close', function(){
+          callback();
+        });
   }).end(null, function (data) {
     console.log('Project ready for execution')
   });
