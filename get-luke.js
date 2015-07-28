@@ -74,9 +74,6 @@ inquirer.prompt(questions, function (answers) {
       else{
         console.log('-Pip will be installed');
       }
-      if (error !== null) {
-        console.log('Error checking for pip: ' + stderr);
-      }
     });
     exec('python -c "help(' + "'modules'" + ')" | grep "fab"', function(error, stdout, stderr) {
       if (stdout.indexOf('fabric') != -1){
@@ -92,9 +89,6 @@ inquirer.prompt(questions, function (answers) {
       }
       else{
         console.log('-Fabutils will be installed');
-      }
-      if (error !== null) {
-        console.log('Error checking for Fabric: ' + stderr);
       }
     });
     setTimeout(callback, 2000);
@@ -115,9 +109,6 @@ inquirer.prompt(questions, function (answers) {
       download.on('end', function(output) {
         st = exec('sudo dpkg -i ./tmp/vbox.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
-          if (error !== null) {
-            console.log('virtualbox installation error: ' + error);
-          }
         });
         st.on('close', function(){
           console.log('virtualbox installation finished');
@@ -139,9 +130,6 @@ inquirer.prompt(questions, function (answers) {
       download.on('end', function(output) {
         st = exec('sudo python ./tmp/pip.py', function(error, stdout, stderr) {
           console.log(stdout);
-          if (error !== null) {
-            console.log('pip installation error: ' + error);
-          }
         });
         st.on('close', function(){
           console.log('pip installation finished');
@@ -163,9 +151,6 @@ inquirer.prompt(questions, function (answers) {
       download.on('end', function(output) {
         st = exec('sudo dpkg -i ./tmp/vagrant.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
-          if (error !== null) {
-            console.log('vagrant installation error: ' + error);
-          }
         });
         st.on('close', function(){
           console.log('vagrant installation finished');
@@ -182,9 +167,6 @@ inquirer.prompt(questions, function (answers) {
     if (instFabr){
       st = exec('sudo pip install fabric', function(error, stdout, stderr) {
         console.log(stdout);
-        if (error !== null) {
-          console.log('fabric installation error: ' + error);
-        }
       });
       st.on('close', function(){
         console.log('fabric installation finished');
