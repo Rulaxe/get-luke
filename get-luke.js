@@ -47,10 +47,10 @@ inquirer.prompt(questions, function (answers) {
     console.log ('Checking dependencies:');
     exec("vboxmanage -v", function(error, stdout, stderr) {
       if (error !== null) {
-          console.log('Se instalará virtualbox');
+          console.log('-Virtualbox will be installed');
       }
       else {
-          console.log('virtualbox is already installed');
+          console.log('-Virtualbox is already installed');
           instVbox = false;
       }
     });
@@ -101,12 +101,13 @@ inquirer.prompt(questions, function (answers) {
     }
 
     if (instVbox){
-      console.log('Instalando virtualbox');
+      console.log('Descargando virtualbox');
       var download = wget.download('http://download.virtualbox.org/virtualbox/5.0.0/virtualbox-5.0_5.0.0-101573~Ubuntu~trusty_amd64.deb', './tmp/vbox.deb');
       download.on('error', function(err) {
           console.log("Error downloading virtualbox: " + err);
       });
       download.on('end', function(output) {
+        console.log('Instalando virtualbox');
         st = exec('sudo dpkg -i ./tmp/vbox.deb -y', function(error, stdout, stderr) {
           console.log(stdout);
         });
